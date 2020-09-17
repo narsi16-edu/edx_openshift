@@ -1,3 +1,15 @@
+if [[ -z $sqld1 ]]; then
+  sqld1=
+fi
+
+if [[ -z $sqld2 ]]; then
+  sqld2=
+fi
+
+if [[ -z $force ]]; then
+  force=
+fi
+
 function posix_setter {
   if [[ -z $(set -o | grep '^posix[^a-zA-Z0-9]*on$') ]]; then
     set -o posix || exit_edx "$?" "failed to set posix"
@@ -80,7 +92,7 @@ fi
 #if [[ -z $running ]]; then
 #  sqldid1=$(docker ps -aqf name="$sqld1")
 #  # echo docker logs "$sqld1"
-sleep 5
+sleep 20
 if [[ -e test.sh ]]; then
   rm  test.h
 fi
@@ -95,7 +107,6 @@ fi
 echo "Printing from inside sql container"
 EOF
 chmod +x test.sh
-
 echo "ipaddress1=${ipaddress1}" > test2.sh
 
 cat >> test2.sh <<'EOF'

@@ -37,13 +37,13 @@ function minishift_close_case {
   fi
 
 
-  if [[ -e "${MINISHIFT_ROOT}"/.minishift_start_register ]]; then
-    rm "${MINISHIFT_ROOT}"/.minishift_start_register
+  #if [[ -e "${MINISHIFT_ROOT}"/.minishift_start_register ]]; then
+    #rm "${MINISHIFT_ROOT}"/.minishift_start_register
     "${MINISHIFT_ROOT}"/minishift delete
-  fi
+  #fi
   if [[ -d "$MINISHIFT_ROOT"/.minishift ]]; then
     rm -r "$MINISHIFT_ROOT"/.minishift
-    export start='true'
+    export commence='true'
   fi
 }
 
@@ -116,16 +116,27 @@ function minishift_process_discovery {
               ;;
             "docker-machine-driver-xhyve")
               mkdir -p "${discovery_folder}"/"${discovery_path}"
-              pushd "${discovery_folder}"/"${discovery_path}"
+              pushd "${discovery_folder}"/"${discovery_path}" \
+              || {
+                  echo "directory changes failed NOT...OK";
+                  exit 1
+                  }
                sudo curl -L \
                https://github.com/zchee/docker-machine-driver-xhyve/releases/download/v0.3.3/docker-machine-driver-xhyve
               return_val=$?
               if [[ $return_val -gt 0 ]]; then
                 echo "discovery filing step for $discovery_item failed Not...OK"
-                rm -r "${discovery_folder}"/"${discovery_item}"
+                rm -r "${discovery_folder:?}"/"${discovery_item:?}" \
+                || {
+                      echo "directory removal failed NOT...OK";
+                      exit 1;
+                   }
                 break
               fi
-              popd
+              popd || {
+                        echo "directory services failed NOT...OK";
+                        exit 1
+                      }
               ;;
           esac
         fi
@@ -187,18 +198,38 @@ function minishift_build_case {
   return $return_val
 }
 
-function minishift_order_in_session {
-  cli_parms=
-  if [[ -e "${MINISHIFT_ROOT}"/.minishift_start_register ]]; then
-    cli_parms="$cli_parms --skip-registration"
-  fi
-   "${MINISHIFT_ROOT}"/minishift start --insecure-registry 172.30.0.0/16  "$cli_parms"
+function minishift_order_is_adjourned {
+
+  {
+    echo export MINISHIFT_USERNAME="$MINISHIFT_USERNAME";
+    echo export MINISHIFT_PASSWORD="$MINISHIFT_PASSWORD";
+  } > "${MINISHIFT_ROOT}"/.minishift_start_register
+
+  "${MINISHIFT_ROOT}"/minishift stop # --skip-unregistration
 }
 
-function minishift_order_is_adjourned {
-  echo 'true' > "${MINISHIFT_ROOT}"/.minishift_start_register
-  "${MINISHIFT_ROOT}"/minishift stop --skip-unregistration
+function minishift_order_in_session {
+  if [[ -e "${MINISHIFT_ROOT}"/.minishift_start_register ]]; then
+    # shellcheck source=${MINISHIFT_ROOT}/.minishift_start_register
+    source "${MINISHIFT_ROOT}"/.minishift_start_register
+  fi
+  trap "minishift_order_is_adjourned ; exit " SIGINT SIGHUP QUIT EXIT
+  "${MINISHIFT_ROOT}"/minishift start --insecure-registry 172.30.0.0/16
+}
 
+
+function minishift_in_session_ok {
+  return_val=0
+
+  case $(minishift status) in
+  "Running")
+  :
+  ;;
+  *)
+  return_val=1
+  ;;
+  esac
+  return $return_val;
 }
 
 export -f exit_edx
@@ -207,7 +238,7 @@ export -f minishift_build_case
 export -f minishift_close_case
 export -f minishift_order_in_session
 export -f minishift_order_is_adjourned
-#export -f minishift_process_discovery
-#export -f minishift_file_discovery
+export -f minishift_in_session_ok
+
 
 

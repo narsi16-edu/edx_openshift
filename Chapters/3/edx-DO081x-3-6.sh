@@ -1,6 +1,7 @@
 #!/bin/bash
 
 scriptpath3="$0"
+it36="$1"
 CHAP3_HOME=$(cd "${scriptpath3%/*}" && pwd;)
 export CHAP3_HOME
 if [[ -z $CHAP3_HOME ]]; then
@@ -30,7 +31,7 @@ else
   export input='continue'
 fi
 
-bash -c "edx-DO081x.sh "
+bash  --posix -c "edx-DO081x.sh "
 
 popd || exit_edx "$?" "changing directory to chapter 3 failed"
 # shellcheck source=${HOME}/.bash_profile
@@ -182,4 +183,14 @@ else
   return_value=$remote_gen_and_invoke_ret
 fi
 
-exit $return_value
+if [[ -z $it36 ]]; then
+  :
+elif [[ $it36 == 'on' ]]; then
+  if [[ -z $PS1 ]]; then
+    bash --posix
+  fi
+else
+  echo 'permissible parameters for it are [on]'
+  exit $return_value
+fi
+

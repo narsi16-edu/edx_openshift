@@ -36,7 +36,7 @@ function oc_mysql_gen_and_invoke() {
     # shellcheck disable=SC2086
     # shellcheck disable=SC2116
     ocsvciaddr=$(echo $ocsvciaddr)
-    oc exec -it "$ocwkpod" /bin/bash <<HERE
+    oc exec -it "$ocwkpod" /bin/bash --posix  <<HERE
     echo uname -a
     mysql -h$ocsvciaddr -P$ocsvsport -uuser -ppassword -D database --execute="show databases;"
 HERE

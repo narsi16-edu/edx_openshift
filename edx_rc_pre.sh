@@ -1,2 +1,0 @@
-export MINISHIFT_USERNAME="narsi16-edu"
-export MINISHIFT_PASSWORD="dG34r!NcoPqY"
